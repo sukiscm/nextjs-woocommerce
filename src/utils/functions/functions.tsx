@@ -50,11 +50,16 @@ interface IProduct {
   node: IProductNode;
 }
 
+interface IVariation {
+  __typename: string;
+  node: IVariationNodes;
+}
+
 export interface IProductRootObject {
   __typename: string;
   key: string;
   product: IProduct;
-  variation?: IVariationNodes;
+  variation?: IVariation;  // ← Cambiado aquí
   quantity: number;
   total: string;
   subtotal: string;

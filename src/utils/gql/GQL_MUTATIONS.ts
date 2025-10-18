@@ -1,5 +1,39 @@
 import { gql } from '@apollo/client';
 
+export const LOGIN_USER = gql`
+  mutation Login($username: String!, $password: String!) {
+    login(
+      input: {
+        provider: PASSWORD
+        credentials: {
+          username: $username
+          password: $password
+        }
+      }
+    ) {
+      authToken
+      refreshToken
+      sessionToken
+      wooSessionToken
+      user {
+        id
+        email
+        name
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+export const LOGOUT_USER = gql`
+  mutation Logout {
+    logout(input: { clientMutationId: "logout" }) {
+      status
+    }
+  }
+`;
+
 export const CREATE_USER = gql`
   mutation CreateUser(
     $username: String!
@@ -28,14 +62,6 @@ export const CREATE_USER = gql`
   }
 `;
 
-export const LOGIN_USER = gql`
-  mutation Login($username: String!, $password: String!) {
-    loginWithCookies(input: { login: $username, password: $password }) {
-      status
-      clientMutationId
-    }
-  }
-`;
 
 export const REFRESH_AUTH_TOKEN = gql`
   mutation RefreshAuthToken($refreshToken: String!) {

@@ -1,13 +1,15 @@
 // src/components/Header/NavbarVercel.tsx
-import { useState, Fragment } from 'react'
+import React, { useState, Fragment, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { ShoppingCart, Search, Menu, X, User, ChevronDown } from 'lucide-react'
-import { Dialog, Transition } from '@headlessui/react'
+import { ShoppingCart, Search, Menu, X, User, ChevronDown, LogOut } from 'lucide-react'
+import { Dialog, Transition, Menu as HeadlessMenu } from '@headlessui/react'
 import clsx from 'clsx'
 
-// ✅ Importar del store de Zustand que YA existe en tu proyecto
+// Importar del store de Zustand
 import { useCartStore } from '@/stores/cartStore'
+// Importar funciones de autenticación
+import { getUserInfo, hasCredentials, logout } from '@/utils/auth'
 
 interface NavItem {
   name: string
@@ -26,18 +28,35 @@ const navigation: NavItem[] = [
       { name: 'Protección', href: '/kategori/proteccion' },
     ],
   },
-  { name: 'Kategorier', href: '/kategorier' },
+  { name: 'Categorías', href: '/kategorier' },
 ]
 
 export default function NavbarVercel() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
-  // ✅ Obtener carrito desde Zustand (tu store existente)
+  // Obtener carrito desde Zustand
   const cart = useCartStore((state) => state.cart)
   const totalItems = cart?.totalProductsCount || 0
+
+  // Verificar autenticación al cargar
+  useEffect(() => {
+    const checkAuth = () => {
+      const loggedIn = hasCredentials()
+      setIsLoggedIn(loggedIn)
+      
+      if (loggedIn) {
+        const userInfo = getUserInfo()
+        setUser(userInfo)
+      }
+    }
+    
+    checkAuth()
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,6 +64,12 @@ export default function NavbarVercel() {
       router.push(`/buscar?q=${encodeURIComponent(searchQuery)}`)
       setSearchOpen(false)
       setSearchQuery('')
+    }
+  }
+
+  const handleLogout = async () => {
+    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      await logout()
     }
   }
 
@@ -116,14 +141,81 @@ export default function NavbarVercel() {
                 <Search className="w-5 h-5 text-accent-7" />
               </button>
 
-              {/* User account (desktop) */}
-              <Link
-                href="/logg-inn"
-                className="hidden md:flex p-2 hover:bg-accent-1 rounded-lg transition-colors"
-                aria-label="Mi cuenta"
-              >
-                <User className="w-5 h-5 text-accent-7" />
-              </Link>
+              {/* User account dropdown (desktop) */}
+              {isLoggedIn && user ? (
+                <HeadlessMenu as="div" className="relative hidden md:block">
+                  <HeadlessMenu.Button className="flex items-center gap-2 p-2 hover:bg-accent-1 rounded-lg transition-colors">
+                    <div className="w-8 h-8 bg-gradient-to-br from-violet to-pink rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {user.firstName?.charAt(0) || user.name?.charAt(0) || 'U'}
+                    </div>
+                    <span className="text-sm font-medium text-accent-9 hidden xl:block">
+                      {user.firstName || user.name?.split(' ')[0] || 'Usuario'}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-accent-7" />
+                  </HeadlessMenu.Button>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <HeadlessMenu.Items className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-lg shadow-magical border border-accent-2 py-2 focus:outline-none">
+                      <div className="px-4 py-3 border-b border-accent-2">
+                        <p className="text-sm font-medium text-accent-9">
+                          {user.name || `${user.firstName} ${user.lastName}`}
+                        </p>
+                        <p className="text-xs text-accent-6 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+
+                      <HeadlessMenu.Item>
+                        {({ active }) => (
+                          <Link
+                            href="/mi-cuenta"
+                            className={clsx(
+                              'flex items-center gap-2 px-4 py-2 text-sm',
+                              active ? 'bg-accent-1 text-accent-9' : 'text-accent-7'
+                            )}
+                          >
+                            <User className="w-4 h-4" />
+                            Mi Cuenta
+                          </Link>
+                        )}
+                      </HeadlessMenu.Item>
+
+                      <HeadlessMenu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={handleLogout}
+                            className={clsx(
+                              'w-full flex items-center gap-2 px-4 py-2 text-sm text-left',
+                              active ? 'bg-red-50 text-red-600' : 'text-accent-7'
+                            )}
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Cerrar Sesión
+                          </button>
+                        )}
+                      </HeadlessMenu.Item>
+                    </HeadlessMenu.Items>
+                  </Transition>
+                </HeadlessMenu>
+              ) : (
+                <Link
+                  href="/iniciar-sesion"
+                  className="hidden md:flex items-center gap-2 px-4 py-2 hover:bg-accent-1 rounded-lg transition-colors"
+                >
+                  <User className="w-5 h-5 text-accent-7" />
+                  <span className="text-sm font-medium text-accent-7 hidden xl:block">
+                    Iniciar Sesión
+                  </span>
+                </Link>
+              )}
 
               {/* Cart */}
               <Link
@@ -166,6 +258,25 @@ export default function NavbarVercel() {
           >
             <div className="lg:hidden py-4 border-t border-accent-2">
               <div className="flex flex-col space-y-1">
+                {/* User info mobile */}
+                {isLoggedIn && user ? (
+                  <div className="px-4 py-3 mb-2 bg-accent-1 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-violet to-pink rounded-full flex items-center justify-center text-white font-bold">
+                        {user.firstName?.charAt(0) || user.name?.charAt(0) || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-accent-9 truncate">
+                          {user.name || `${user.firstName} ${user.lastName}`}
+                        </p>
+                        <p className="text-xs text-accent-6 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
                 {navigation.map((item) => (
                   <div key={item.name}>
                     <Link
@@ -196,13 +307,39 @@ export default function NavbarVercel() {
                     )}
                   </div>
                 ))}
-                <Link
-                  href="/logg-inn"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-base font-medium text-accent-7 hover:text-accent-9 hover:bg-accent-1 transition-colors"
-                >
-                  Mi Cuenta
-                </Link>
+
+                {/* Mobile account links */}
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      href="/mi-cuenta"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-base font-medium text-accent-7 hover:text-accent-9 hover:bg-accent-1 transition-colors"
+                    >
+                      <User className="w-5 h-5" />
+                      Mi Cuenta
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        handleLogout()
+                      }}
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      Cerrar Sesión
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/iniciar-sesion"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-base font-medium text-accent-7 hover:text-accent-9 hover:bg-accent-1 transition-colors"
+                  >
+                    <User className="w-5 h-5" />
+                    Iniciar Sesión
+                  </Link>
+                )}
               </div>
             </div>
           </Transition>
@@ -212,7 +349,6 @@ export default function NavbarVercel() {
       {/* Search Modal */}
       <Transition show={searchOpen} as={Fragment}>
         <Dialog onClose={() => setSearchOpen(false)} className="relative z-50">
-          {/* Backdrop */}
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -225,7 +361,6 @@ export default function NavbarVercel() {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
           </Transition.Child>
 
-          {/* Modal */}
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-start justify-center p-4 pt-20">
               <Transition.Child
@@ -250,7 +385,6 @@ export default function NavbarVercel() {
                     />
                   </form>
                   
-                  {/* Sugerencias de búsqueda */}
                   <div className="p-4">
                     <p className="text-sm text-accent-5 mb-3">Búsquedas populares</p>
                     <div className="flex flex-wrap gap-2">

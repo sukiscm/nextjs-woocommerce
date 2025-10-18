@@ -1,3 +1,4 @@
+// src/components/User/UserLogin.component.tsx
 import { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { login } from '../../utils/auth';
@@ -11,11 +12,6 @@ interface ILoginData {
   password: string;
 }
 
-/**
- * User login component that handles user authentication
- * @function UserLogin
- * @returns {JSX.Element} - Rendered component with login form
- */
 const UserLogin = () => {
   const methods = useForm<ILoginData>();
   const [loading, setLoading] = useState(false);
@@ -27,55 +23,47 @@ const UserLogin = () => {
     setError(null);
     try {
       const result = await login(data.username, data.password);
-      if (result.success && result.status === 'SUCCESS') {
-        router.push('/min-konto');
-      } else {
-        throw new Error('Failed to login');
+      if (result.success) {
+        // Redirigir a mi cuenta
+        router.push('/mi-cuenta');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('An unknown error occurred.');
+        setError('Ocurrió un error desconocido.');
       }
-      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="text-gray-700 container p-4 py-2 mx-auto mb-[8rem] md:mb-0">
+    <section>
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)}>
-          <div className="mx-auto lg:w-1/2 flex flex-wrap">
-            <InputField
-              inputName="username"
-              inputLabel="Brukernavn eller e-post"
-              type="text"
-              customValidation={{ required: true }}
-            />
-            <InputField
-              inputName="password"
-              inputLabel="Passord"
-              type="password"
-              customValidation={{ required: true }}
-            />
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+          <InputField
+            inputName="username"
+            inputLabel="Usuario o Correo Electrónico"
+            type="text"
+            customValidation={{ required: true }}
+          />
+          <InputField
+            inputName="password"
+            inputLabel="Contraseña"
+            type="password"
+            customValidation={{ required: true }}
+          />
 
-            {error && (
-              <div className="w-full p-2 text-red-600 text-sm text-center">
-                {error}
-              </div>
-            )}
-
-            <div className="w-full p-2">
-              <div className="mt-4 flex justify-center">
-                <Button variant="primary" buttonDisabled={loading}>
-                  {loading ? <LoadingSpinner /> : 'Logg inn'}
-                </Button>
-              </div>
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
-          </div>
+          )}
+
+          <Button variant="primary" buttonDisabled={loading} fullWidth>
+            {loading ? <LoadingSpinner /> : 'Iniciar Sesión'}
+          </Button>
         </form>
       </FormProvider>
     </section>

@@ -1,10 +1,14 @@
+// src/components/User/UserRegistration.component.tsx
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useForm, FormProvider } from 'react-hook-form';
+import { useRouter } from 'next/router';
 import { CREATE_USER } from '../../utils/gql/GQL_MUTATIONS';
 import { InputField } from '../Input/InputField.component';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
 import Button from '../UI/Button.component';
+import { CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
 interface IRegistrationData {
   username: string;
@@ -14,94 +18,125 @@ interface IRegistrationData {
   lastName: string;
 }
 
-/**
- * User registration component that handles WooCommerce customer creation
- * @function UserRegistration
- * @returns {JSX.Element} - Rendered component with registration form
- */
 const UserRegistration = () => {
   const methods = useForm<IRegistrationData>();
-  const [registerUser, { loading, error }] = useMutation(CREATE_USER);
+  const [registerUser, { loading }] = useMutation(CREATE_USER);
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const onSubmit = async (data: IRegistrationData) => {
+    setError(null);
     try {
       const response = await registerUser({
         variables: data,
       });
 
       const customer = response.data?.registerCustomer?.customer;
+      
       if (customer) {
         setRegistrationCompleted(true);
+        
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+          router.push('/iniciar-sesion');
+        }, 2000);
       } else {
-        throw new Error('Failed to register customer');
+        throw new Error('Error al crear la cuenta');
       }
-    } catch (error: unknown) {
-      console.error('Registration error:', error);
+    } catch (error: any) {
+      console.error('Error de registro:', error);
+      
+      // Mensajes de error en español
+      if (error.message?.includes('email')) {
+        setError('Este correo electrónico ya está registrado.');
+      } else if (error.message?.includes('username')) {
+        setError('Este nombre de usuario ya existe.');
+      } else {
+        setError('Error al crear la cuenta. Por favor intenta de nuevo.');
+      }
     }
   };
 
   if (registrationCompleted) {
     return (
-      <div className="text-center my-8">
-        <h2 className="text-2xl font-bold text-green-600 mb-4">
-          Registrering vellykket!
+      <div className="text-center py-8">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-10 h-10 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-light text-accent-9 mb-2">
+          ¡Cuenta creada exitosamente!
         </h2>
-        <p>Du kan nå logge inn med din konto.</p>
+        <p className="text-accent-6 mb-4">
+          Redirigiendo a inicio de sesión...
+        </p>
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <section className="text-gray-700 container p-4 py-2 mx-auto mb-[8rem] md:mb-0">
+    <section>
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)}>
-          <div className="mx-auto lg:w-1/2 flex flex-wrap">
-            <InputField
-              inputName="username"
-              inputLabel="Brukernavn"
-              type="text"
-              customValidation={{ required: true }}
-            />
-            <InputField
-              inputName="email"
-              inputLabel="E-post"
-              type="email"
-              customValidation={{ required: true }}
-            />
-            <InputField
-              inputName="password"
-              inputLabel="Passord"
-              type="password"
-              customValidation={{ required: true }}
-            />
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <InputField
               inputName="firstName"
-              inputLabel="Fornavn"
+              inputLabel="Nombre"
               type="text"
               customValidation={{ required: true }}
             />
             <InputField
               inputName="lastName"
-              inputLabel="Etternavn"
+              inputLabel="Apellido"
               type="text"
               customValidation={{ required: true }}
             />
-
-            {error && (
-              <div className="w-full p-2 text-red-600 text-sm text-center">
-                {error.message}
-              </div>
-            )}
-
-            <div className="w-full p-2">
-              <div className="mt-4 flex justify-center">
-                <Button variant="primary" buttonDisabled={loading}>
-                  {loading ? <LoadingSpinner /> : 'Registrer'}
-                </Button>
-              </div>
-            </div>
           </div>
+
+          <InputField
+            inputName="username"
+            inputLabel="Nombre de Usuario"
+            type="text"
+            customValidation={{ required: true }}
+          />
+
+          <InputField
+            inputName="email"
+            inputLabel="Correo Electrónico"
+            type="email"
+            customValidation={{ required: true }}
+          />
+
+          <InputField
+            inputName="password"
+            inputLabel="Contraseña"
+            type="password"
+            customValidation={{ required: true, minLength: 6 }}
+          />
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <div className="pt-2">
+            <Button variant="primary" buttonDisabled={loading} fullWidth>
+              {loading ? <LoadingSpinner /> : 'Crear Cuenta'}
+            </Button>
+          </div>
+
+          <p className="text-xs text-accent-6 text-center">
+            Al registrarte, aceptas nuestros{' '}
+            <Link href="/terminos" className="text-primary hover:underline">
+              Términos y Condiciones
+            </Link>
+            {' '}y{' '}
+            <Link href="/privacidad" className="text-primary hover:underline">
+              Política de Privacidad
+            </Link>
+          </p>
         </form>
       </FormProvider>
     </section>

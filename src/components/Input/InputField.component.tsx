@@ -1,8 +1,10 @@
+// src/components/Input/InputField.component.tsx
 import { FieldValues, useFormContext, UseFormRegister } from 'react-hook-form';
 
 interface ICustomValidation {
   required?: boolean;
-  minlength?: number;
+  minLength?: number;
+  pattern?: string;
 }
 
 interface IErrors {}
@@ -16,38 +18,55 @@ export interface IInputRootObject {
   type?: string;
 }
 
-/**
- * Input field component displays a text input in a form, with label.
- * The various properties of the input field can be determined with the props:
- * @param {ICustomValidation} [customValidation] - the validation rules to apply to the input field
- * @param {IErrors} errors - the form errors object provided by react-hook-form
- * @param {string} inputLabel - used for the display label
- * @param {string} inputName - the key of the value in the submitted data. Must be unique
- * @param {UseFormRegister<FieldValues>} register - register function from react-hook-form
- * @param {boolean} [required=true] - whether or not this field is required. default true
- * @param {string} [type='text'] - the input type. defaults to text
- */
 export const InputField = ({
   customValidation,
   inputLabel,
   inputName,
   type,
 }: IInputRootObject) => {
-  const { register } = useFormContext();
+  const { register, formState: { errors } } = useFormContext();
+  const error = errors[inputName];
 
   return (
-    <div className="w-1/2 p-2">
-      <label htmlFor={inputName} className="pb-4">
+    <div className="space-y-2">
+      <label 
+        htmlFor={inputName} 
+        className="block text-sm font-medium text-accent-7"
+      >
         {inputLabel}
+        {customValidation.required && (
+          <span className="text-red-500 ml-1">*</span>
+        )}
       </label>
       <input
-        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        className={`
+          w-full px-4 py-2.5 text-sm
+          bg-white border rounded-lg
+          transition-all duration-200
+          focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet
+          disabled:bg-accent-1 disabled:cursor-not-allowed
+          ${error 
+            ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
+            : 'border-accent-2'
+          }
+        `}
         id={inputName}
         placeholder={inputLabel}
         type={type ?? 'text'}
         {...customValidation}
-        {...register(inputName)}
+        {...register(inputName, {
+          required: customValidation.required ? `${inputLabel} es requerido` : false,
+          minLength: customValidation.minLength ? {
+            value: customValidation.minLength,
+            message: `Mínimo ${customValidation.minLength} caracteres`
+          } : undefined,
+        })}
       />
+      {error && (
+        <p className="text-xs text-red-600 mt-1">
+          {error.message as string}
+        </p>
+      )}
     </div>
   );
 };

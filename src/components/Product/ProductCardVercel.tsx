@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { paddedPrice } from '@/utils/functions/functions';
-import clsx from 'clsx';
 
 interface ProductCardProps {
   databaseId: number;

@@ -1,5 +1,6 @@
 // Imports
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Star, StarHalf, Package, Shield, Truck, Heart, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -95,9 +96,9 @@ const SingleProduct = ({ product }: IProductRootObject) => {
         <div className="container-custom py-8">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-accent-6 mb-8">
-            <a href="/" className="hover:text-accent-9 transition-colors">Inicio</a>
+            <Link href="/" className="hover:text-accent-9 transition-colors">Inicio</Link>
             <span>/</span>
-            <a href="/productos" className="hover:text-accent-9 transition-colors">Productos</a>
+            <Link href="/productos" className="hover:text-accent-9 transition-colors">Productos</Link>
             <span>/</span>
             <span className="text-accent-9">{name}</span>
           </nav>

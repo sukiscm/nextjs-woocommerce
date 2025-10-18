@@ -1,41 +1,43 @@
+// src/components/User/withAuth.component.tsx
 import { useRouter } from 'next/router';
 import { useEffect, ComponentType, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { GET_CURRENT_USER } from '../../utils/gql/GQL_QUERIES';
+import { hasCredentials } from '../../utils/auth';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
 
 const withAuth = <P extends object>(WrappedComponent: ComponentType<P>) => {
   const Wrapper = (props: P) => {
     const router = useRouter();
     const [isChecking, setIsChecking] = useState(true);
-    
-    const { data, loading, error } = useQuery(GET_CURRENT_USER, {
-      errorPolicy: 'all',
-      fetchPolicy: 'cache-and-network',
-    });
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-      if (!loading) {
-        setIsChecking(false);
+      const checkAuth = async () => {
+        const hasAuth = hasCredentials();
         
-        // If there's an error or no customer data, user is not authenticated
-        if (error || !data?.customer) {
-          router.push('/logg-inn');
+        if (!hasAuth) {
+          router.push('/iniciar-sesion');
+        } else {
+          setIsAuthenticated(true);
         }
-      }
-    }, [data, loading, error, router]);
+        
+        setIsChecking(false);
+      };
 
-    // Show loading while checking authentication
-    if (loading || isChecking) {
+      checkAuth();
+    }, [router]);
+
+    if (isChecking) {
       return (
         <div className="flex justify-center items-center min-h-screen">
-          <LoadingSpinner />
+          <div className="text-center">
+            <LoadingSpinner />
+            <p className="mt-4 text-accent-6">Verificando sesión...</p>
+          </div>
         </div>
       );
     }
 
-    // If no customer data, don't render the component
-    if (!data?.customer) {
+    if (!isAuthenticated) {
       return null;
     }
 

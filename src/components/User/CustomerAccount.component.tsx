@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { GET_CUSTOMER_ORDERS } from '../../utils/gql/GQL_QUERIES';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
+import { logout } from '@/utils/auth';
 
 interface Order {
   id: string;
@@ -17,7 +18,15 @@ interface Order {
  */
 const CustomerAccount = () => {
   const { loading, error, data } = useQuery(GET_CUSTOMER_ORDERS);
-
+  const handleLogout = async () => {
+    // Clear local storage
+    localStorage.removeItem('woo-session');
+    localStorage.removeItem('woocommerce-cart');
+    
+    // Redirect to home - this will clear cookies on the server
+   await logout()
+    window.location.href = '/';
+  };
   if (loading) return <LoadingSpinner />;
   if (error) return <p>Error: {error.message}</p>;
 
@@ -26,6 +35,12 @@ const CustomerAccount = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Mine ordre</h1>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+        >
+          Cerrar Sesión
+        </button>
       {orders && orders.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white">

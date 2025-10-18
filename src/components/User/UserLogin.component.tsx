@@ -25,7 +25,7 @@ const UserLogin = () => {
       const result = await login(data.username, data.password);
       if (result.success) {
         // Redirigir a mi cuenta
-        router.push('/mi-cuenta');
+        window.location.href = '/mi-cuenta';
       }
     } catch (error: unknown) {
       if (error instanceof Error) {

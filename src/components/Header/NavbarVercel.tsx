@@ -6,9 +6,8 @@ import { ShoppingCart, Search, Menu, X, User, ChevronDown } from 'lucide-react'
 import { Dialog, Transition } from '@headlessui/react'
 import clsx from 'clsx'
 
-// Importa tu hook de carrito existente
-// Ajusta la ruta según tu proyecto
-import { useCart } from '@/lib/store/cart'
+// ✅ Importar del store de Zustand que YA existe en tu proyecto
+import { useCartStore } from '@/stores/cartStore'
 
 interface NavItem {
   name: string
@@ -19,17 +18,15 @@ interface NavItem {
 const navigation: NavItem[] = [
   {
     name: 'Productos',
-    href: '/productos',
+    href: '/produkter',
     children: [
-      { name: 'Réplicas Eléctricas', href: '/categoria/replicas-electricas' },
-      { name: 'Réplicas de Gas', href: '/categoria/replicas-gas' },
-      { name: 'Accesorios', href: '/categoria/accesorios' },
-      { name: 'Protección', href: '/categoria/proteccion' },
+      { name: 'Réplicas Eléctricas', href: '/kategori/replicas-electricas' },
+      { name: 'Réplicas de Gas', href: '/kategori/replicas-gas' },
+      { name: 'Accesorios', href: '/kategori/accesorios' },
+      { name: 'Protección', href: '/kategori/proteccion' },
     ],
   },
-  { name: 'Ofertas', href: '/ofertas' },
-  { name: 'Nuevo', href: '/nuevos' },
-  { name: 'Blog', href: '/blog' },
+  { name: 'Kategorier', href: '/kategorier' },
 ]
 
 export default function NavbarVercel() {
@@ -38,10 +35,9 @@ export default function NavbarVercel() {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
-  // Obtener items del carrito desde tu store
-  // Ajusta según tu implementación actual
-  const cart = useCart((state) => state.items)
-  const totalItems = cart?.reduce((sum, item) => sum + item.quantity, 0) || 0
+  // ✅ Obtener carrito desde Zustand (tu store existente)
+  const cart = useCartStore((state) => state.cart)
+  const totalItems = cart?.totalProductsCount || 0
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,24 +73,22 @@ export default function NavbarVercel() {
                   <Link
                     href={item.href}
                     className={clsx(
-                      'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                      'flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                       router.pathname === item.href
                         ? 'text-accent-9 bg-accent-1'
                         : 'text-accent-7 hover:text-accent-9 hover:bg-accent-1'
                     )}
                   >
-                    <span className="flex items-center gap-1">
-                      {item.name}
-                      {item.children && (
-                        <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform" />
-                      )}
-                    </span>
+                    {item.name}
+                    {item.children && (
+                      <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform" />
+                    )}
                   </Link>
 
                   {/* Dropdown menu */}
                   {item.children && (
-                    <div className="absolute left-0 mt-1 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 animate-slideDown">
-                      <div className="bg-white rounded-lg shadow-magical border border-accent-2 py-2 mt-1">
+                    <div className="absolute left-0 top-full mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="bg-white rounded-lg shadow-magical border border-accent-2 py-2">
                         {item.children.map((child) => (
                           <Link
                             key={child.name}
@@ -124,7 +118,7 @@ export default function NavbarVercel() {
 
               {/* User account (desktop) */}
               <Link
-                href="/cuenta"
+                href="/logg-inn"
                 className="hidden md:flex p-2 hover:bg-accent-1 rounded-lg transition-colors"
                 aria-label="Mi cuenta"
               >
@@ -133,7 +127,7 @@ export default function NavbarVercel() {
 
               {/* Cart */}
               <Link
-                href="/carrito"
+                href="/handlekurv"
                 className="relative p-2 hover:bg-accent-1 rounded-lg transition-colors group"
                 aria-label="Carrito de compras"
               >
@@ -203,7 +197,7 @@ export default function NavbarVercel() {
                   </div>
                 ))}
                 <Link
-                  href="/cuenta"
+                  href="/logg-inn"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-4 py-3 rounded-lg text-base font-medium text-accent-7 hover:text-accent-9 hover:bg-accent-1 transition-colors"
                 >
@@ -256,7 +250,7 @@ export default function NavbarVercel() {
                     />
                   </form>
                   
-                  {/* Sugerencias de búsqueda (opcional) */}
+                  {/* Sugerencias de búsqueda */}
                   <div className="p-4">
                     <p className="text-sm text-accent-5 mb-3">Búsquedas populares</p>
                     <div className="flex flex-wrap gap-2">
@@ -284,7 +278,3 @@ export default function NavbarVercel() {
     </>
   )
 }
-
-// src/components/Header/index.tsx
-// Exportar para usar en Layout
-export { default } from './NavbarVercel'

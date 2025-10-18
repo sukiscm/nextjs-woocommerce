@@ -1,6 +1,6 @@
 // Components
 import Hero from '@/components/Index/Hero.component';
-import DisplayProducts from '@/components/Product/DisplayProducts.component';
+import ProductGridVercel from '@/components/Product/ProductGridVercel';
 import Layout from '@/components/Layout/Layout.component';
 
 // Utilities
@@ -24,7 +24,9 @@ const Index: NextPage = ({
 }: InferGetStaticPropsType<typeof getStaticProps>) => (
   <Layout title="Hjem">
     <Hero />
-    {products && <DisplayProducts products={products} />}
+    {products && <div className="container mx-auto px-4 py-8">
+  <ProductGridVercel products={products} />
+</div>}
   </Layout>
 );
 

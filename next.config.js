@@ -15,7 +15,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
+        hostname: 'airsoftmexico.com.mx',
         pathname: '**',
       },
     ],

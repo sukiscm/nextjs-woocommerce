@@ -2,8 +2,7 @@ import { withRouter } from 'next/router';
 
 // Components
 import Layout from '@/components/Layout/Layout.component';
-import DisplayProducts from '@/components/Product/DisplayProducts.component';
-
+import ProductGridVercel from '@/components/Product/ProductGridVercel';
 import client from '@/utils/apollo/ApolloClient';
 
 import { GET_PRODUCTS_FROM_CATEGORY } from '@/utils/gql/GQL_QUERIES';
@@ -19,7 +18,7 @@ const Produkt = ({
   return (
     <Layout title={`${categoryName ? categoryName : ''}`}>
       {products ? (
-        <DisplayProducts products={products} />
+        <ProductGridVercel products={products} />
       ) : (
         <div className="mt-8 text-2xl text-center">Laster produkt ...</div>
       )}
